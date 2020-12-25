@@ -21,6 +21,7 @@ protected AddAidl addService;
 EditText fno,sno;
 TextView resTextView;
 int n1,n2;
+boolean isConnected = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,21 +36,29 @@ int n1,n2;
         String no1 = fno.getText().toString();
         n1 = Integer.parseInt(no1);
         n2 = Integer.parseInt(sno.getText().toString());
-        Intent addServiceIntent = new Intent();
-       // addServiceIntent.setAction("service.calc");
-        addServiceIntent.setPackage("com.next.server");
-        addServiceIntent.setClassName("com.next.server", "com.next.server.AddService");
 
-
-
-        bindService(addServiceIntent,serviceConnection,BIND_AUTO_CREATE);
+        if(!isConnected) {
+            Intent addServiceIntent = new Intent();
+            // addServiceIntent.setAction("service.calc");
+            addServiceIntent.setPackage("com.next.server");
+            addServiceIntent.setClassName("com.next.server", "com.next.server.AddService");//step 1
+            bindService(addServiceIntent, serviceConnection, BIND_AUTO_CREATE);
+        }
+        else{
+            try {
+                resTextView.setText("result is ="+addService.add(n1,n2));
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+    private ServiceConnection serviceConnection = new ServiceConnection() {//step 2
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Log.d(TAG, "Service Connected");
+            isConnected = true;
             addService = AddAidl.Stub.asInterface((IBinder) iBinder);
             try {
                 int res = addService.add(n1,n2);
